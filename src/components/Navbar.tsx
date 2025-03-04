@@ -11,9 +11,15 @@ export default function Navbar() {
   const pathname = usePathname();
 
   useEffect(() => {
+    // Ensure this runs only on client-side
     const user = LocalStorageService.getUser();
     setIsLoggedIn(!!user);
   }, [pathname]);
+
+  // Render nothing on server to prevent hydration mismatches
+  if (typeof window === 'undefined') {
+    return null;
+  }
 
   const handleLogout = () => {
     LocalStorageService.removeUser();

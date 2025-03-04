@@ -2,26 +2,34 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import EventCard from '@/components/EventCard';
-import EventForm from '@/components/EventForm';
+import dynamic from 'next/dynamic';
 import { LocalStorageService } from '@/utils/localStorage';
-import { Event } from '@/lib/types';
+import { Event, User } from '@/lib/types';
+
+// Dynamically import components
+const EventCard = dynamic(() => import('@/components/EventCard'), { ssr: false });
+const EventForm = dynamic(() => import('@/components/EventForm'), { ssr: false });
 
 export default function EventDetailPage() {
   const [event, setEvent] = useState<Event | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User>();
   const router = useRouter();
   const params = useParams();
-  const currentUser = LocalStorageService.getUser();
 
   useEffect(() => {
-    if (!currentUser) {
+    // Ensure this runs only on client-side
+    const user = LocalStorageService.getUser();
+    
+    if (!user) {
       router.push('/login');
       return;
     }
 
+    setCurrentUser(user);
+
     const events = LocalStorageService.getEvents();
-    const foundEvent = events.find(e => e.id === params.id);
+    const foundEvent = events.find((e: Event) => e.id === params.id);
     
     if (foundEvent) {
       setEvent(foundEvent);
@@ -30,7 +38,10 @@ export default function EventDetailPage() {
     }
   }, [params.id]);
 
-  if (!event) return null;
+  // Render nothing on server to prevent hydration mismatches
+  if (typeof window === 'undefined' || !event) {
+    return null;
+  }
 
   // Only allow editing by the event creator
   const canEdit = currentUser?.id === event.creatorId;

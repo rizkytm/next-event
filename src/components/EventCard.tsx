@@ -28,7 +28,7 @@ export default function EventCard({ event, canManage = false }: EventCardProps) 
     }
 
     const events = LocalStorageService.getEvents();
-    const updatedEvent = events.find(e => e.id === event.id);
+    const updatedEvent = events.find((e: Event) => e.id === event.id);
     
     if (updatedEvent) {
       updatedEvent.registeredUsers = updatedEvent.registeredUsers || [];
@@ -47,11 +47,11 @@ export default function EventCard({ event, canManage = false }: EventCardProps) 
     if (!currentUser) return;
 
     const events = LocalStorageService.getEvents();
-    const updatedEvent = events.find(e => e.id === event.id);
+    const updatedEvent = events.find((e: Event) => e.id === event.id);
     
     if (updatedEvent) {
       updatedEvent.registeredUsers = updatedEvent.registeredUsers?.filter(
-        userId => userId !== currentUser.id
+        (userId: string) => userId !== currentUser.id
       );
       LocalStorageService.updateEvent(updatedEvent);
       alert('Registration cancelled successfully.');

@@ -1,25 +1,37 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import EventCard from '@/components/EventCard';
-import { LocalStorageService } from '@/utils/localStorage';
-import { Event } from '@/lib/types';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
+import { LocalStorageService } from '@/utils/localStorage';
+import { Event, User } from '@/lib/types';
+
+// Dynamically import EventCard to ensure client-side rendering
+const EventCard = dynamic(() => import('@/components/EventCard'), { ssr: false });
 
 export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
+  const [currentUser, setCurrentUser] = useState<User>();
   const router = useRouter();
-  const currentUser = LocalStorageService.getUser();
 
   useEffect(() => {
-    if (!currentUser) {
+    // Ensure this runs only on client-side
+    const user = LocalStorageService.getUser();
+    
+    if (!user) {
       router.push('/login');
       return;
     }
 
+    setCurrentUser(user);
     const storedEvents = LocalStorageService.getEvents();
     setEvents(storedEvents);
   }, []);
+
+  // Render nothing on server to prevent hydration mismatches
+  if (typeof window === 'undefined') {
+    return null;
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
